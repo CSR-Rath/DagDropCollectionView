@@ -9,6 +9,8 @@ import UIKit
 
 class DragDropCollectionVC :UIViewController, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UICollectionViewDragDelegate, UICollectionViewDropDelegate {
     
+    var isDraggingItem: Bool = false
+    
     static let  cell = "MenuListDragDropCell"
             var didSelectItemsCell : ((_ : MenuListModel)->())?
     var collectionView : UICollectionView!
@@ -104,7 +106,9 @@ extension DragDropCollectionVC{
     // MARK: - UICollectionViewDragDelegate
     
     func collectionView(_ collectionView: UICollectionView, itemsForBeginning session: UIDragSession, at indexPath: IndexPath) -> [UIDragItem] {
-        //        UIDevice.vibrate()
+
+        
+        isDraggingItem = true
         
         let generator = UIImpactFeedbackGenerator(style: .light) // You can change the style to .medium or .heavy
         generator.prepare()
@@ -171,13 +175,40 @@ extension DragDropCollectionVC{
     
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
-        print(indexPath.row)
-        
         let selectedItem = dataList[indexPath.item]
         print("selectedItem: \(selectedItem)")
+
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, dragSessionDidEnd session: UIDragSession) {
+          print("Drag session ended")  // Check if this is being called
+          isDraggingItem = false
+      }
+}
+
+extension DragDropCollectionVC{ // Prevents unmoved drag
+    
+    // MARK: - Setup Long Press Gesture Recognizer
+    private func setupLongPressGestureRecognizer() {
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressGesture(_:)))
+        collectionView.addGestureRecognizer(longPressGesture)
+    }
+    
+    @objc private func handleLongPressGesture(_ gesture: UILongPressGestureRecognizer) {
+        let location = gesture.location(in: collectionView)
+        guard collectionView.indexPathForItem(at: location) != nil else { return }
         
-//        didSelectItemsCell?(MenuTitle(rawValue: selectedItem) ?? MenuTitle.none)
+        switch gesture.state {
+        case .began:
+            
+            break
+            
+        case .ended, .cancelled:
+            isDraggingItem = false
+            
+        default:
+            break
+        }
     }
 }
 
